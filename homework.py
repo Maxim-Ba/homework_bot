@@ -5,26 +5,16 @@ import sys
 import time
 import requests
 import telegram
-
-# from telegram.ext import CommandHandler, Updater, Filters, MessageHandler
-
 from dotenv import load_dotenv
 
 load_dotenv()
-logging.basicConfig(
-    level=logging.DEBUG,
-    filemode="w",
-    format="%(asctime)s, %(levelname)s, %(message)s",
-)
-logger = logging.getLogger(__name__)
-handler = logging.StreamHandler(stream=sys.stdout)
-logger.addHandler(handler)
 
 
 PRACTICUM_TOKEN = os.getenv("PRACTICUM_TOKEN")
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
+# 600 секунд
 RETRY_PERIOD = 600
 ENDPOINT = "https://practicum.yandex.ru/api/user_api/homework_statuses/"
 HEADERS = {"Authorization": f"OAuth {PRACTICUM_TOKEN}"}
@@ -35,7 +25,6 @@ HOURS_IN_DAY = 24
 ONE_DAY_IN_SEC = HOURS_IN_DAY * MINUTES_IN_HOUR * SECONDS_IN_MINUTE
 MONTH = 30 * ONE_DAY_IN_SEC
 
-TEN_MINUTES = SECONDS_IN_MINUTE * 10
 
 HOMEWORK_VERDICTS = {
     "approved": "Работа проверена: ревьюеру всё понравилось. Ура!",
@@ -109,13 +98,19 @@ def get_api_answer(timestamp):
 def check_response(response):
     """Проверка корректности ответа апи."""
     if not isinstance(response, dict):
-        raise TypeError("Тип ответа не dict")
+        raise TypeError(f"Тип ответа не dict, response=={response} ")
     if "homeworks" not in response:
         raise Exception("Нет поля homeworks в ответе")
     if not isinstance(response["homeworks"], list):
-        raise TypeError("Тип homeworks не list")
+        item = response["homeworks"]
+        raise TypeError(
+            "Тип homeworks не list, response['homeworks'] == {item}"
+        )
     if not isinstance(response["homeworks"][-1], dict):
-        raise TypeError("Тип ответа не dict")
+        item = response["homeworks"][-1]
+        raise TypeError(
+            f"Тип ответа не dict, response['homeworks'][-1]=={item}"
+        )
     return response["homeworks"][-1]
 
 
@@ -161,8 +156,16 @@ def main():
             logging.error(message)
             send_message(bot, message)
         finally:
-            time.sleep(TEN_MINUTES)
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.DEBUG,
+        filemode="w",
+        format="%(asctime)s, %(levelname)s, %(message)s",
+    )
+    logger = logging.getLogger(__name__)
+    handler = logging.StreamHandler(stream=sys.stdout)
+    logger.addHandler(handler)
     main()
