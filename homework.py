@@ -106,12 +106,12 @@ def check_response(response):
         raise TypeError(
             "Тип homeworks не list, response['homeworks'] == {item}"
         )
-    if not isinstance(response["homeworks"][-1], dict):
-        item = response["homeworks"][-1]
+    if not isinstance(response["homeworks"][0], dict):
+        item = response["homeworks"][0]
         raise TypeError(
-            f"Тип ответа не dict, response['homeworks'][-1]=={item}"
+            f"Тип ответа не dict, response['homeworks'][0]=={item}"
         )
-    return response["homeworks"][-1]
+    return response["homeworks"][0]
 
 
 def parse_status(homework):
